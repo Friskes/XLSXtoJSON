@@ -140,8 +140,8 @@ if __name__ == '__main__':
 
     create_data_list()
 
-    sorted_data = [{slot_id: sorted(item_data, reverse=True, key=lambda x: x['quality'])}
-                   for slot_data in data for slot_id, item_data in slot_data.items()]
+    sorted_data = [{slot_id: sorted(item_data, reverse=True, key=lambda x: x['quality'])
+                    for slot_data in data for slot_id, item_data in slot_data.items()}]
 
     write_data_to_json('itemsdata.json', sorted_data)
 
