@@ -127,7 +127,7 @@ def create_data_list():
     print(f'\nПроцент добавленных итемов от их общего количества: {percent_diff:.0f}%')
 
 
-def write_data_to_json(file_name):
+def write_data_to_json(file_name, data):
     with open(file_name, 'w', encoding='utf-8') as file:
         dump(data, file, ensure_ascii=False)
 
@@ -143,6 +143,9 @@ if __name__ == '__main__':
 
     create_data_list()
 
-    write_data_to_json('itemsdata.json')
+    sorted_data = [{slot_Id: sorted(item_data, reverse=True, key=lambda x: x['quality'])}
+                   for slot_data in data for slot_Id, item_data in slot_data.items()]
+
+    write_data_to_json('itemsdata.json', sorted_data)
 
     print('\nПрограмма успешно завершилась!')
