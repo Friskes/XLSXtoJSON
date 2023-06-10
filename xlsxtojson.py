@@ -50,7 +50,8 @@ ITEM_QUALITIES = {
     1: 'Common',   # (white)
     2: 'Uncommon', # (green)
     3: 'Rare',     # (blue)
-    4: 'Epic'      # (purple)
+    4: 'Epic',     # (purple)
+    5: 'Legendary' # (orange)
 }
 
 data = [{
@@ -81,26 +82,22 @@ data = [{
 
 
 def append_items_to_data(row_data):
-    # {'ItemID': 17, 'ItemName': 'Martin Fury', 'quality': 0,
-    # 'patch': '1.12.1', 'inventoryType': 'Shirt', 'displayInfoId': 5661}
 
-    if not row_data.get('patch') or int(row_data['patch'].split('.')[0]) > 3: return
-    if not row_data.get('inventoryType') or row_data['inventoryType'] not in ALLOWED_ITEM_INVENTORY_TYPES: return
-    if not row_data.get('displayInfoId'): return
-    if not row_data.get('quality') or row_data['quality'] < 2: return
+    if not row_data.get('patch') or int(row_data['patch'].split('.')[0]) > 3: return False
+    if not row_data.get('inventoryType') or row_data['inventoryType'] not in ALLOWED_ITEM_INVENTORY_TYPES: return False
+    if not row_data.get('displayInfoId'): return False
+    if not row_data.get('quality') or row_data['quality'] < 1: return False
+    if not row_data.get('itemSubClass'): return False
 
     ITEM_DATA = {
         'itemId': row_data['ItemID'],
-        'displayId': row_data['displayInfoId']
+        'displayId': row_data['displayInfoId'],
+        'quality': row_data['quality'],
+        'type': row_data['itemSubClass']
     }
+
     data[0][ALLOWED_ITEM_INVENTORY_TYPES[row_data['inventoryType']]].append(ITEM_DATA)
-
-    # print(json.dumps(ITEM_DATA, indent=4, ensure_ascii=False))
-
-
-def write_data_to_json(file_name):
-    with open(file_name, 'w', encoding='utf-8') as file:
-        dump(data, file, ensure_ascii=False)
+    return True
 
 
 def get_column_names():
@@ -112,40 +109,31 @@ def get_column_names():
 
 
 def create_data_list():
+    rows_recorded = 0
 
-    row_recorded = 0
-    for row in sheet.rows:
+    for row in sheet.iter_rows(min_row=2):
         row_data = {}
         for cell in row:
-            try:
-                if cell.column == 1:    # ItemID
-                    row_data.update({column_names[0]: cell.value})
-                elif cell.column == 2:  # ItemName
-                    row_data.update({column_names[1]: cell.value})
-                elif cell.column == 8:  # icon
-                    row_data.update({column_names[7]: cell.value})
-                elif cell.column == 11: # quality
-                    row_data.update({column_names[10]: cell.value})
-                elif cell.column == 12: # patch
-                    row_data.update({column_names[11]: cell.value})
-                elif cell.column == 41: # inventoryType
-                    row_data.update({column_names[40]: cell.value})
-                elif cell.column == 65: # displayInfoId
-                    row_data.update({column_names[64]: cell.value})
-            except AttributeError:
-                continue
+            if cell.value is None: continue
+            row_data.update({column_names[cell.column-1]: cell.value})
 
-        row_recorded += 1
-        if row_recorded == 1: continue
+        rows_recorded += append_items_to_data(row_data)
 
-        append_items_to_data(row_data)
+        if not rows_recorded % 1000:
+            print('max-row:', max_row, 'rows-recorded:', rows_recorded)
 
-        print('max-row:', max_row, 'row-recorded:', row_recorded)
+    percent_diff = (rows_recorded * 100) / max_row
+    print(f'\nИтемов было добавлено: {rows_recorded}')
+    print(f'\nПроцент добавленных итемов от их общего количества: {percent_diff:.0f}%')
 
-    print(f'{row_recorded} Итемов было добавлено в список data')
+
+def write_data_to_json(file_name):
+    with open(file_name, 'w', encoding='utf-8') as file:
+        dump(data, file, ensure_ascii=False)
 
 
 if __name__ == '__main__':
+
     wb = load_workbook('items.xlsx', read_only=True)
     sheet = wb[wb.sheetnames[0]]
     max_row = sheet.max_row
