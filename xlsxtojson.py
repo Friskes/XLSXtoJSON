@@ -101,11 +101,8 @@ def append_items_to_data(row_data):
 
 
 def get_column_names():
-    column_names = []
-    for i in range(max_column):
-        # строка, колонка
-        column_names.append(sheet[1][i].value)
-    return column_names
+    # строка, колонка
+    return [sheet[1][i].value for i in range(max_column)]
 
 
 def create_data_list():
@@ -143,8 +140,8 @@ if __name__ == '__main__':
 
     create_data_list()
 
-    sorted_data = [{slot_Id: sorted(item_data, reverse=True, key=lambda x: x['quality'])}
-                   for slot_data in data for slot_Id, item_data in slot_data.items()]
+    sorted_data = [{slot_id: sorted(item_data, reverse=True, key=lambda x: x['quality'])}
+                   for slot_data in data for slot_id, item_data in slot_data.items()]
 
     write_data_to_json('itemsdata.json', sorted_data)
 
