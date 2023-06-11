@@ -88,12 +88,14 @@ def append_items_to_data(row_data):
     if not row_data.get('displayInfoId'): return False
     if not row_data.get('quality') or row_data['quality'] < 1: return False
     if not row_data.get('itemSubClass'): return False
+    if not row_data.get('itemLevel'): return False
 
     ITEM_DATA = {
         'itemId': row_data['ItemID'],
         'displayId': row_data['displayInfoId'],
         'quality': row_data['quality'],
-        'type': row_data['itemSubClass']
+        'type': row_data['itemSubClass'],
+        'ilvl': row_data['itemLevel']
     }
 
     data[0][ALLOWED_ITEM_INVENTORY_TYPES[row_data['inventoryType']]].append(ITEM_DATA)
@@ -140,7 +142,7 @@ if __name__ == '__main__':
 
     create_data_list()
 
-    sorted_data = [{slot_id: sorted(item_data, reverse=True, key=lambda x: x['quality'])
+    sorted_data = [{slot_id: sorted(item_data, reverse=True, key=lambda item: (int(item['quality']), int(item['ilvl'])))
                     for slot_data in data for slot_id, item_data in slot_data.items()}]
 
     write_data_to_json('itemsdata.json', sorted_data)
