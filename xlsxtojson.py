@@ -180,9 +180,10 @@ data = [{
     23: []
 }]
 
+rows_recorded = 0
+
 
 def append_items_to_data(medium_data: dict):
-    rows_recorded = 0
 
     for item_data in clean_data:
 
@@ -194,15 +195,14 @@ def append_items_to_data(medium_data: dict):
             'displayId': displayId,
             'type': item_data['type'],
             'quality': item_data['quality'],
-            'ilvl': item_data['ilvl']
+            'ilvl': item_data['ilvl'],
+            'icon': item_data['icon'],
+            'name': item_data['name']
         }
         data[0][ALLOWED_SLOTS[item_data['slot']]].append(ITEM_DATA)
 
+        global rows_recorded
         rows_recorded += 1
-
-    percent_diff = (rows_recorded * 100) / max_row
-    print(f'\n\nИтемов было добавлено: {rows_recorded}\nОт их общего количества: {max_row}')
-    print(f'\nПроцент добавленных итемов от их общего количества: {percent_diff:.0f}%')
 
 
 def read_data_from_xlsx():
@@ -265,6 +265,8 @@ def get_clean_data(file_name: str) -> List[dict]:
             'type': item_data['subclass'],
             'quality': ITEM_QUALITIES[item_data['quality']],
             'ilvl': item_data['itemLevel'],
+            'icon': item_data['icon'],
+            'name': item_data['name'],
             'slot': item_data['slot']
         })
 
@@ -292,6 +294,10 @@ if __name__ == '__main__':
     spin.stop()
     spin.join()
 
-    print('\nAVAILABLE_SUBCLASSES:', dumps(AVAILABLE_SUBCLASSES, indent=4, ensure_ascii=False))
+    print('\nAVAILABLE_SUBCLASSES =', dumps(AVAILABLE_SUBCLASSES, indent=4, ensure_ascii=False))
 
-    print('\nПрограмма успешно завершилась!')
+    percent_diff = (rows_recorded * 100) / max_row
+    print(f'\nИтемов было добавлено: {rows_recorded}\nОт их общего количества: {max_row}')
+    print(f'\nПроцент добавленных итемов от их общего количества: {percent_diff:.0f}%')
+
+    print('\nПрограмма успешно завершилась!\n')
