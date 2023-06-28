@@ -177,7 +177,9 @@ data = [{
     19: [],
     21: [],
     22: [],
-    23: []
+    23: [],
+    'enchants': [],
+    'mounts': []
 }]
 
 rows_recorded = 0
@@ -221,8 +223,9 @@ def read_data_from_xlsx():
     append_items_to_data(medium_data)
 
 
-def sorting_data_by_quality_and_ilvl() -> List[dict]:
+def sorting_data_by_quality_and_ilvl_or_name() -> List[dict]:
     return [{slot_id: sorted(item_data, reverse=True, key=lambda item: (int(item['quality']), int(item['ilvl'])))
+             if isinstance(slot_id, int) else sorted(item_data, key=lambda item: item['name'])
              for slot_data in data for slot_id, item_data in slot_data.items()}]
 
 
@@ -273,6 +276,29 @@ def get_clean_data(file_name: str) -> List[dict]:
     return clean_data
 
 
+def append_enchants_to_data(file_name: str):
+    enchants_data: List[dict] = read_data_from_json(file_name)
+
+    for enchant in enchants_data[0].values():
+        ENCHANT_DATA = {
+            'visualId': enchant['visual'],
+            'name': enchant['name'],
+            'icon': enchant['icon']
+        }
+        data[0]['enchants'].append(ENCHANT_DATA)
+
+
+def append_mounts_to_data(file_name: str):
+    mounts_data: List[dict] = read_data_from_json(file_name)
+
+    for mount in mounts_data[0].values():
+        MOUNT_DATA = {
+            'displayId': mount['npcmodel'],
+            'name': mount['name']
+        }
+        data[0]['mounts'].append(MOUNT_DATA)
+
+
 if __name__ == '__main__':
     spin.start()
 
@@ -287,7 +313,10 @@ if __name__ == '__main__':
 
     read_data_from_xlsx()
 
-    sorted_data = sorting_data_by_quality_and_ilvl()
+    append_enchants_to_data('files/enchants.json')
+    append_mounts_to_data('files/mounts.json')
+
+    sorted_data = sorting_data_by_quality_and_ilvl_or_name()
 
     write_data_to_json('files/itemsdata.json', sorted_data)
 
