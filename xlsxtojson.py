@@ -225,7 +225,7 @@ def read_data_from_xlsx():
 
 def sorting_data_by_quality_and_ilvl_or_name() -> List[dict]:
     return [{slot_id: sorted(item_data, reverse=True, key=lambda item: (int(item['quality']), int(item['ilvl'])))
-             if isinstance(slot_id, int) else sorted(item_data, key=lambda item: item['name'])
+             if isinstance(slot_id, int) else item_data # sorted(item_data, key=lambda item: item['name'])
              for slot_data in data for slot_id, item_data in slot_data.items()}]
 
 
@@ -291,6 +291,7 @@ def append_enchants_to_data(file_name: str):
 def append_mounts_to_data(file_name: str):
     mounts_data: List[dict] = read_data_from_json(file_name)
 
+    # с (mountId +- 382) заканчивается WRATH и начинаются следующие патчи (элементы массива отсортированы по mountId)
     for mount in mounts_data[0].values():
         MOUNT_DATA = {
             'displayId': mount['npcmodel'],
