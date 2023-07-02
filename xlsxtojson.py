@@ -291,7 +291,7 @@ def append_enchants_to_data(file_name: str):
 def append_mounts_to_data(file_name: str):
     mounts_data: List[dict] = read_data_from_json(file_name)
 
-    # с (mountId +- 382) заканчивается WRATH и начинаются следующие патчи (элементы массива отсортированы по mountId)
+    # на 290 маунте по счёту заканчивается WRATH и начинаются следующие патчи
     for mount in mounts_data[0].values():
         MOUNT_DATA = {
             'spellId': mount['id'],
