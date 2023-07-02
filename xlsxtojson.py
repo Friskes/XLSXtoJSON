@@ -294,6 +294,7 @@ def append_mounts_to_data(file_name: str):
     # с (mountId +- 382) заканчивается WRATH и начинаются следующие патчи (элементы массива отсортированы по mountId)
     for mount in mounts_data[0].values():
         MOUNT_DATA = {
+            'spellId': mount['id'],
             'displayId': mount['npcmodel'],
             'name': mount['name']
         }
