@@ -223,9 +223,9 @@ def read_data_from_xlsx():
     append_items_to_data(medium_data)
 
 
-def sorting_data_by_quality_and_ilvl_or_name() -> List[dict]:
+def sorting_data_by_quality_and_ilvl_or_visualid() -> List[dict]:
     return [{slot_id: sorted(item_data, reverse=True, key=lambda item: (int(item['quality']), int(item['ilvl'])))
-             if isinstance(slot_id, int) else item_data # sorted(item_data, key=lambda item: item['name'])
+             if isinstance(slot_id, int) else sorted(item_data, key=lambda item: item['visualId'] if item.get('visualId') else False)
              for slot_data in data for slot_id, item_data in slot_data.items()}]
 
 
@@ -279,6 +279,7 @@ def get_clean_data(file_name: str) -> List[dict]:
 def append_enchants_to_data(file_name: str):
     enchants_data: List[dict] = read_data_from_json(file_name)
 
+    # на 28 чарке по счёту заканчивается WRATH и начинаются следующие патчи
     for enchant in enchants_data[0].values():
         ENCHANT_DATA = {
             'visualId': enchant['visual'],
@@ -318,7 +319,7 @@ if __name__ == '__main__':
     append_enchants_to_data('files/enchants.json')
     append_mounts_to_data('files/mounts.json')
 
-    sorted_data = sorting_data_by_quality_and_ilvl_or_name()
+    sorted_data = sorting_data_by_quality_and_ilvl_or_visualid()
 
     write_data_to_json('files/itemsdata.json', sorted_data)
 
