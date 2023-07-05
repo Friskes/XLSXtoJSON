@@ -16,7 +16,7 @@ spin = SpinCursor(
 
 AVAILABLE_SUBCLASSES = {
     # "4-Shirt": [
-    #     "Miscellaneous" # Miscellaneous это разнообразные итемы, могут быть как оружием так и бронёй.
+    #     "Miscellaneous"
     # ],
     # "21-Main Hand": [
     #     "Sword",
@@ -64,6 +64,14 @@ AVAILABLE_SUBCLASSES = {
     #     "Miscellaneous"
     # ],
     # "21-One-Hand": [
+    #     "Sword",
+    #     "Mace",
+    #     "Dagger",
+    #     "Axe",
+    #     "Fist Weapon",
+    #     "Miscellaneous"
+    # ],
+    # "22-One-Hand": [
     #     "Sword",
     #     "Mace",
     #     "Dagger",
@@ -128,39 +136,39 @@ AVAILABLE_SUBCLASSES = {
 }
 
 ITEM_QUALITIES = {
-    'Poor': 0,      # (gray)
-    'Common': 1,    # (white)
-    'Uncommon': 2,  # (green)
-    'Rare': 3,      # (blue)
-    'Epic': 4,      # (purple)
+    'Poor':      0, # (gray)
+    'Common':    1, # (white)
+    'Uncommon':  2, # (green)
+    'Rare':      3, # (blue)
+    'Epic':      4, # (purple)
     'Legendary': 5, # (orange)
-    'Heirloom': 7   # (blizzard blue) фамильные
+    'Heirloom':  7  # (blizzard blue) фамильные
 }
 
 ALLOWED_SLOTS = {
-    'Shirt': 4,
-    'Main Hand': 21,
-    'Legs': 7,
-    'Feet': 8,
-    'Chest': 5,
-    'Two-Hand': 21,
-    'Hands': 10,
-    'One-Hand': 21,
-    # 'Trinket': 13, # 14
-    'Wrist': 9,
-    'Waist': 6,
-    # 'Finger': 11, # 12
-    'Off Hand': 22,
-    'Held In Off-hand': 22,
-    'Back': 16,
-    'Head': 1,
-    # 'Neck': 2,
-    'Shoulder': 3,
-    'Ranged': 23,
-    # 'Non-equippable': None,
-    'Tabard': 19,
-    # 'Relic': 0,
-    'Thrown': 23
+    'Shirt':            [4],
+    'Main Hand':        [21],
+    'Legs':             [7],
+    'Feet':             [8],
+    'Chest':            [5],
+    'Two-Hand':         [21],
+    'Hands':            [10],
+    'One-Hand':         [21, 22],
+    # 'Trinket':          [13, 14],
+    'Wrist':            [9],
+    'Waist':            [6],
+    # 'Finger':           [11, 12],
+    'Off Hand':         [22],
+    'Held In Off-hand': [22],
+    'Back':             [16],
+    'Head':             [1],
+    # 'Neck':             [2],
+    'Shoulder':         [3],
+    'Ranged':           [23],
+    # 'Non-equippable':   [None],
+    'Tabard':           [19],
+    # 'Relic':            [0],
+    'Thrown':           [23]
 }
 
 data = [{
@@ -185,7 +193,7 @@ data = [{
 rows_recorded = 0
 
 
-def append_items_to_data(medium_data: dict):
+def append_game_objects_to_data(medium_data: dict):
 
     for item_data in clean_data:
 
@@ -199,9 +207,11 @@ def append_items_to_data(medium_data: dict):
             'quality': item_data['quality'],
             'ilvl': item_data['ilvl'],
             'icon': item_data['icon'],
-            'name': item_data['name']
+            'name': item_data['name'],
+            'slotName': item_data['slot'] # временно добавляю slotName для нужд сортировки
         }
-        data[0][ALLOWED_SLOTS[item_data['slot']]].append(ITEM_DATA)
+        for slotId in ALLOWED_SLOTS[item_data['slot']]:
+            data[0][slotId].append(ITEM_DATA)
 
         global rows_recorded
         rows_recorded += 1
@@ -220,11 +230,11 @@ def read_data_from_xlsx():
         if not row_data.get('displayInfoId'): continue
         medium_data.update({row_data['ItemID']: row_data['displayInfoId']})
 
-    append_items_to_data(medium_data)
+    append_game_objects_to_data(medium_data)
 
 
-def sorting_data_by_quality_and_ilvl_or_visualid() -> List[dict]:
-    return [{slot_id: sorted(item_data, reverse=True, key=lambda item: (int(item['quality']), int(item['ilvl'])))
+def sorting_data_by_quality_and_ilvl_and_slotName_or_visualid() -> List[dict]:
+    return [{slot_id: sorted(item_data, reverse=True, key=lambda item: (int(item['quality']), int(item['ilvl']), item['slotName']))
              if isinstance(slot_id, int) else sorted(item_data, key=lambda item: item['visualId'] if item.get('visualId') else False)
              for slot_data in data for slot_id, item_data in slot_data.items()}]
 
@@ -234,9 +244,9 @@ def get_column_names() -> List[str]:
     return [sheet[1][i].value for i in range(max_column)]
 
 
-def write_data_to_json(file_name: str, data):
+def write_data_to_json(file_name: str):
     with open(file_name, 'w', encoding='utf-8') as file:
-        dump(data, file, ensure_ascii=False)
+        dump(sorted_data, file, ensure_ascii=False)
 
 
 def read_data_from_json(file_name: str):
@@ -255,13 +265,15 @@ def get_clean_data(file_name: str) -> List[dict]:
         if item_data['slot'] not in ALLOWED_SLOTS: continue
         if not item_data.get('subclass'): continue
 
-        slotId_and_slotName = f"{ALLOWED_SLOTS[item_data['slot']]}-{item_data['slot']}"
+        for slotId in ALLOWED_SLOTS[item_data['slot']]:
 
-        if slotId_and_slotName not in AVAILABLE_SUBCLASSES:
-            AVAILABLE_SUBCLASSES.update({slotId_and_slotName: []})
-        else:
-            if item_data['subclass'] not in AVAILABLE_SUBCLASSES[slotId_and_slotName]:
-                AVAILABLE_SUBCLASSES[slotId_and_slotName].append(item_data['subclass'])
+            slotId_and_slotName = f"{slotId}-{item_data['slot']}"
+
+            if slotId_and_slotName not in AVAILABLE_SUBCLASSES:
+                AVAILABLE_SUBCLASSES.update({slotId_and_slotName: []})
+            else:
+                if item_data['subclass'] not in AVAILABLE_SUBCLASSES[slotId_and_slotName]:
+                    AVAILABLE_SUBCLASSES[slotId_and_slotName].append(item_data['subclass'])
 
         clean_data.append({
             'itemId': item_data['itemId'],
@@ -302,6 +314,17 @@ def append_mounts_to_data(file_name: str):
         data[0]['mounts'].append(MOUNT_DATA)
 
 
+def delete_slotName_prop():
+    """Удаляю не нужное свойство slotName из data после сортировки перед сохранением в файл."""
+
+    for slotId in data[0].keys():
+        if isinstance(slotId, str): continue
+
+        for item_data in sorted_data[0][slotId]:
+            if item_data.get('slotName'):
+                del item_data['slotName']
+
+
 if __name__ == '__main__':
     spin.start()
 
@@ -319,9 +342,11 @@ if __name__ == '__main__':
     append_enchants_to_data('files/enchants.json')
     append_mounts_to_data('files/mounts.json')
 
-    sorted_data = sorting_data_by_quality_and_ilvl_or_visualid()
+    sorted_data = sorting_data_by_quality_and_ilvl_and_slotName_or_visualid()
 
-    write_data_to_json('files/itemsdata.json', sorted_data)
+    delete_slotName_prop()
+
+    write_data_to_json('files/gameData.json')
 
     spin.stop()
     spin.join()
